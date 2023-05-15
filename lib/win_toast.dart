@@ -55,7 +55,7 @@ class WinToast {
 
   static WinToast? _winToast;
 
-  static WinToast instance() {
+  static WinToast? instance() {
     if (_winToast == null) {
       _winToast = WinToast._private();
       _channel.setMethodCallHandler((call) async {
@@ -66,7 +66,7 @@ class WinToast {
         }
       });
     }
-    return _winToast!;
+    return _winToast;
   }
 
   bool _supportToast = false;
@@ -87,6 +87,8 @@ class WinToast {
     String argument,
     Map<String, String> userInput,
   ) {
+    print(
+        '========= _onNotificationActivated argument:$argument, userInput: $userInput');
     _activatedCallback?.call(ActivatedEvent(
       argument: argument,
       userInput: userInput,
@@ -94,6 +96,8 @@ class WinToast {
   }
 
   void _onNotificationDismissed(String tag, String group, int reason) {
+    print(
+        '========= _onNotificationDismissed tag:$tag, group: $group reason: $reason');
     _dismissedCallback?.call(DismissedEvent(
       tag: tag,
       group: group,

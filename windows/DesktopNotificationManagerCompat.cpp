@@ -143,7 +143,7 @@ void DesktopNotificationManagerCompat::Uninstall() {
 
 std::wstring GenerateGuid(std::wstring name) {
   // From https://stackoverflow.com/a/41622689/1454643
-  if (name.length() <= 16) {
+  if (name.length() == 16) {
     wchar_t guid[36];
     swprintf_s(
         guid,

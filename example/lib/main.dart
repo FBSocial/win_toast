@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:mixin_logger/mixin_logger.dart';
@@ -7,9 +9,9 @@ import 'package:win_toast/win_toast.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await WinToast.instance().initialize(
-    aumId: 'com.example.coba',
-    displayName: 'Example Application',
-    iconPath: '',
+    aumId: 'iDreamSky.Fanbook',
+    displayName: 'Fanbook',
+    iconPath: r'D:\workspace\fanbook\social\assets\app-icon\icon_round.png',//use .png picture
     clsid: '936C39FC-6BBC-4A57-B8F8-7C627E401B2F',
   );
   runApp(const MyApp());
@@ -114,13 +116,84 @@ class _MainPageState extends State<MainPage> {
       children: [
         TextButton(
           onPressed: () async {
-            const xml = """
+            await WinToast.instance().clear();
+            print('========== clear ==========');
+            const name = 'Andrew sent you a picture';
+            const content = 'Check this out, Happy Canyon in Utah!';
+            const imagePath =
+                r'D:\workspace\githubcode\flutter-plugins\packages\win_toast\example\assets\image.png';
+            Future.delayed(
+              const Duration(milliseconds: 500),
+              () {
+                print('========= showNotification ===========');
+                showNotification(name, content, imagePath);
+              },
+            );
+          },
+          child: const Text('show custom'),
+        ),
+        // TextButton(
+        //   onPressed: () async {
+        //     try {
+        //       await WinToast.instance().showToast(
+        //         toast: Toast(
+        //           duration: ToastDuration.short,
+        //           launch: 'action=viewConversation&conversationId=9813',
+        //           children: [
+        //             ToastChildAudio(source: ToastAudioSource.defaultSound),
+        //             ToastChildVisual(
+        //               binding: ToastVisualBinding(
+        //                 children: [
+        //                   ToastVisualBindingChildText(
+        //                     text: 'HelloWorld',
+        //                     id: 1,
+        //                   ),
+        //                   ToastVisualBindingChildText(
+        //                     text: 'by win_toast',
+        //                     id: 2,
+        //                   ),
+        //                 ],
+        //               ),
+        //             ),
+        //             ToastChildActions(children: [
+        //               ToastAction(
+        //                 content: "Close",
+        //                 arguments: "close_argument",
+        //               )
+        //             ]),
+        //           ],
+        //         ),
+        //       );
+        //     } catch (error, stacktrace) {
+        //       i('showTextToast error: $error, $stacktrace');
+        //     }
+        //   },
+        //   child: const Text('show with builder'),
+        // ),
+        TextButton(
+          onPressed: () async {
+            await WinToast.instance().clear();
+          },
+          child: const Text('clear'),
+        ),
+      ],
+    );
+  }
+
+  /// 显示通知
+  /// name: 显示名称
+  /// content: 消息文字内容
+  /// imagePath: 头像路径
+  Future<void> showNotification(
+      String name, String content, String imagePath) async {
+    final xml = """
 <?xml version="1.0" encoding="UTF-8"?>
 <toast launch="action=viewConversation&amp;conversationId=9813">
    <visual>
       <binding template="ToastGeneric">
-         <text>Andrew sent you a picture</text>
-         <text>Check this out, Happy Canyon in Utah!</text>
+         <text>$name</text>
+         <text>$content</text>
+         <image placement='appLogoOverride' src='$imagePath' hint-crop='circle'/>
       </binding>
    </visual>
    <actions>
@@ -130,55 +203,12 @@ class _MainPageState extends State<MainPage> {
       <action content="View" activationType="background" arguments="action=viewImage&amp;imageUrl=https://picsum.photos/364/202?image=883" />
    </actions>
 </toast>
-            """;
-            try {
-              await WinToast.instance()
-                  .showCustomToast(xml: xml, tag: 'NOTIF', group: 'hello');
-            } catch (error, stacktrace) {
-              i('showCustomToast error: $error, $stacktrace');
-            }
-          },
-          child: const Text('show custom'),
-        ),
-        TextButton(
-          onPressed: () async {
-            try {
-              await WinToast.instance().showToast(
-                toast: Toast(
-                  duration: ToastDuration.short,
-                  launch: 'action=viewConversation&conversationId=9813',
-                  children: [
-                    ToastChildAudio(source: ToastAudioSource.defaultSound),
-                    ToastChildVisual(
-                      binding: ToastVisualBinding(
-                        children: [
-                          ToastVisualBindingChildText(
-                            text: 'HelloWorld',
-                            id: 1,
-                          ),
-                          ToastVisualBindingChildText(
-                            text: 'by win_toast',
-                            id: 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                    ToastChildActions(children: [
-                      ToastAction(
-                        content: "Close",
-                        arguments: "close_argument",
-                      )
-                    ]),
-                  ],
-                ),
-              );
-            } catch (error, stacktrace) {
-              i('showTextToast error: $error, $stacktrace');
-            }
-          },
-          child: const Text('show with builder'),
-        ),
-      ],
-    );
+""";
+    try {
+      await WinToast.instance()
+          .showCustomToast(xml: xml, tag: 'FANBOOK_NOTIF', group: 'hello');
+    } catch (error, stacktrace) {
+      i('showCustomToast error: $error, $stacktrace');
+    }
   }
 }
