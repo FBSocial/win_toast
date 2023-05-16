@@ -20,6 +20,29 @@
 #include <memory>
 #include <inspectable.h>
 
+namespace Util {
+
+  const LONG STATUS_SUCCESS = (0x00000000);
+  typedef LONG NTSTATUS, *PNTSTATUS;
+  typedef NTSTATUS(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
+  inline RTL_OSVERSIONINFOW getRealOSVersion() {
+      HMODULE hMod = ::GetModuleHandleW(L"ntdll.dll");
+      if (hMod) {
+          RtlGetVersionPtr fxPtr = (RtlGetVersionPtr)::GetProcAddress(hMod, "RtlGetVersion");
+          if (fxPtr != nullptr) {
+              RTL_OSVERSIONINFOW rovi = { 0 };
+              rovi.dwOSVersionInfoSize = sizeof(rovi);
+              if (STATUS_SUCCESS == fxPtr(&rovi)) {
+                  return rovi;
+              }
+          }
+      }
+      RTL_OSVERSIONINFOW rovi = { 0 };
+      return rovi;
+  }
+
+}
+
 namespace {
 
 using namespace winrt;
@@ -33,7 +56,7 @@ class WinToastPlugin : public flutter::Plugin {
 
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
 
-  explicit WinToastPlugin(std::shared_ptr<FlutterMethodChannel> channel);
+  explicit WinToastPlugin(std::shared_ptr<FlutterMethodChannel> channel, HWND hwnd);
 
   ~WinToastPlugin() override;
 
@@ -41,6 +64,8 @@ class WinToastPlugin : public flutter::Plugin {
   std::shared_ptr<FlutterMethodChannel> channel_;
 
   bool is_supported_;
+
+  HWND window_handle_;
 
   // Called when a method is called on this plugin's channel from Dart.
   void HandleMethodCall(
@@ -59,7 +84,7 @@ void WinToastPlugin::RegisterWithRegistrar(
       registrar->messenger(), "win_toast",
       &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<WinToastPlugin>(channel);
+  auto plugin = std::make_unique<WinToastPlugin>(channel, registrar->GetView()->GetNativeWindow());
   channel->SetMethodCallHandler(
       [pluginref = plugin.get()](const auto &call, auto result) {
         pluginref->HandleMethodCall(call, std::move(result));
@@ -68,8 +93,8 @@ void WinToastPlugin::RegisterWithRegistrar(
   registrar->AddPlugin(std::move(plugin));
 }
 
-WinToastPlugin::WinToastPlugin(std::shared_ptr<FlutterMethodChannel> channel)
-    : channel_(std::move(channel)), is_supported_(false) {
+WinToastPlugin::WinToastPlugin(std::shared_ptr<FlutterMethodChannel> channel, HWND hwnd)
+    : channel_(std::move(channel)), window_handle_(hwnd), is_supported_(false) {
 
   if (IsWindows10OrGreater()) {
     HRESULT hr = DllImporter::Initialize();
@@ -206,6 +231,23 @@ void WinToastPlugin::HandleMethodCall(
       DesktopNotificationManagerCompat::History().Clear();
       result->Success();
     WIN_TOAST_RESULT_END
+  } else if (method_call.method_name().compare("showWindow") == 0) {
+    if (window_handle_) {
+     HWND hwmd = GetAncestor(window_handle_, GA_ROOT);
+     if (IsIconic(hwmd)) {
+         ShowWindow(hwmd, SW_RESTORE);
+     } else {
+         ShowWindow(hwmd, SW_SHOW);
+         SetForegroundWindow(hwmd);
+     }
+    }
+    result->Success();
+  } else if (method_call.method_name().compare("isSupport") == 0) {
+    constexpr auto MinimumSupportedVersion = 6;
+    bool isSupport = Util::getRealOSVersion().dwMajorVersion > MinimumSupportedVersion;
+    result->Success(isSupport);
+  } else if (method_call.method_name().compare("isWindowVisible") == 0) {
+    result->Success(GetAncestor(window_handle_, GA_ROOT) == GetForegroundWindow());
   } else {
     result->NotImplemented();
   }

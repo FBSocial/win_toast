@@ -87,8 +87,8 @@ class WinToast {
     String argument,
     Map<String, String> userInput,
   ) {
-    print(
-        '========= _onNotificationActivated argument:$argument, userInput: $userInput');
+    // print(
+    //     '========= _onNotificationActivated argument:$argument, userInput: $userInput');
     _activatedCallback?.call(ActivatedEvent(
       argument: argument,
       userInput: userInput,
@@ -96,8 +96,8 @@ class WinToast {
   }
 
   void _onNotificationDismissed(String tag, String group, int reason) {
-    print(
-        '========= _onNotificationDismissed tag:$tag, group: $group reason: $reason');
+    // print(
+    //     '========= _onNotificationDismissed tag:$tag, group: $group reason: $reason');
     _dismissedCallback?.call(DismissedEvent(
       tag: tag,
       group: group,
@@ -204,5 +204,17 @@ class WinToast {
       'tag': tag,
       'group': group,
     });
+  }
+
+  Future<void> showWindow() {
+    return _channel.invokeMethod('showWindow');
+  }
+
+  Future<dynamic> isSupportWinToast() {
+    return _channel.invokeMethod('isSupport');
+  }
+
+  Future<dynamic> isWindowVisible() {
+    return _channel.invokeMethod('isWindowVisible');
   }
 }
